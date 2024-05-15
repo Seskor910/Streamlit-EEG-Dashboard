@@ -73,6 +73,8 @@ from coherence_delta import proses_coherence_delta
 from coherence_gamma import proses_coherence_gamma
 from coherence_theta import proses_coherence_theta
 
+from test import proses_testing
+from testgambar import proses_testing_gambar
 
 st.title('EEG Dashboard')
 
@@ -313,7 +315,6 @@ if uploaded_file is not None:
         st.success("Combining images completed successfully.")
 
         # Testing kelas
-        from test import proses_testing
         majority_class, class_count = proses_testing(combined_image_directory)
         st.success(f"Majority class detected: {majority_class}")
         st.write("Class counts:")
@@ -324,7 +325,28 @@ if uploaded_file is not None:
     
     finally:
         # Clean up the temporary file
-        os.unlink(temp_path)
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
 
+uploaded_image = st.file_uploader("Upload a processed image", type=['png', 'jpg', 'jpeg'])
+if uploaded_image is not None:
+    with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(uploaded_image.name)[1]) as tmp:
+        tmp.write(uploaded_image.getbuffer())
+        temp_image_path = tmp.name
+    try:
+       st.image(temp_image_path, caption="Uploaded Image", use_column_width=True)
+
+       majority_class, class_count = proses_testing_gambar(temp_image_path)
+       st.success(f"Majority class detected: {majority_class}")
+       st.write("Class counts:")
+       st.write(class_count)
+
+    
+    except Exception as e:
+        st.error(f"Failed to predict the image: {str(e)}")
+
+    finally:
+        if temp_image_path and os.path.exists(temp_image_path):
+            os.remove(temp_image_path)
 else:
     st.info("Please upload a file.")
